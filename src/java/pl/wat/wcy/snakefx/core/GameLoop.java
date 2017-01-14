@@ -1,68 +1,125 @@
 package pl.wat.wcy.snakefx.core;
 
-
+import javafx.animation.Animation;
 import javafx.animation.Animation.Status;
-import pl.wat.wcy.snakefx.core.GameLoop;
-import pl.wat.wcy.snakefx.core.SpeedLevel;
-import pl.wat.wcy.snakefx.viewmodel.ViewModel;
+import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import org.mockito.internal.util.reflection.Whitebox;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.util.Duration;
+import pl.wat.wcy.snakefx.viewmodel.ViewModel;
 
-import static org.assertj.core.api.Assertions.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class GameLoop {
 
-	private GameLoop gameLoop;
-	private ViewModel viewModel;
+    private static final int ONE_SECOND = 1000;
+
+    private Timeline timeline;
 
 
-	public void setup() {
-		viewModel = new ViewModel();
-		viewModel.speed.set(SpeedLevel.SLOW);
-		gameLoop = new GameLoop(viewModel);
-	}
+    private final List<Consumer<?>> actions = new ArrayList<>();
 
+    private final ViewModel viewModel;
 
-	public void StoppedTimelineStaysStoppedAfterSpeedChange() {
-		assertThat(getTimeline().getStatus()).isEqualTo(Status.STOPPED);
+    public GameLoop(final ViewModel viewModel) {
+        this.viewModel = viewModel;
+        viewModel.collision.addListener(new CollisionListener());
+        viewModel.speed.addListener(new SpeedChangeListener());
+        viewModel.gameloopStatus.addListener(new StatusChangedListener());
 
-		viewModel.speed.set(SpeedLevel.FAST);
+        init();
+    }
 
-		assertThat(getTimeline().getStatus()).isEqualTo(Status.STOPPED);
-	}
+    public void addActions(final Consumer<?>... actions) {
+        this.actions.addAll(Arrays.asList(actions));
+    }
 
-	public void PlayingTimelineStaysPlayingAfterSpeedChange() {
-		getTimeline().play();
-		assertThat(getTimeline().getStatus()).isEqualTo(Status.RUNNING);
+    private void init() {
+        timeline = new Timeline(buildKeyFrame());
+        timeline.setCycleCount(Animation.INDEFINITE);
 
-		viewModel.speed.set(SpeedLevel.FAST);
+        timeline.statusProperty().addListener((observable, oldStatus,
+                                               newStatus) -> {
+            viewModel.gameloopStatus.set(newStatus);
+        });
+    }
 
+    private KeyFrame buildKeyFrame() {
 
-		assertThat(getTimeline().getStatus()).isEqualTo(Status.RUNNING);
-	}
+        final int fps = viewModel.speed.get().getFps();
+        final Duration duration = Duration.millis(ONE_SECOND / fps);
 
-	public void TimelineIsPlayingAfterChangeInViewModel() {
-		assertThat(viewModel.gameloopStatus.get()).isEqualTo(Status.STOPPED);
-		assertThat(getTimeline().getStatus()).isEqualTo(Status.STOPPED);
+        final KeyFrame frame = new KeyFrame(duration, event -> {
+            actions.forEach(consumer -> {
+                consumer.accept(null);
+            });
+        });
 
-		viewModel.gameloopStatus.set(Status.RUNNING);
+        return frame;
+    }
 
-		assertThat(getTimeline().getStatus()).isEqualTo(Status.RUNNING);
-	}
+    private final class StatusChangedListener implements ChangeListener<Status> {
+        @Override
+        public void changed(final ObservableValue<? extends Status> arg0, final Status oldStatus,
+                            final Status newStatus) {
 
-	public void PlayingTimelineIsStoppedAfterChangeInViewModel() {
-		assertThat(viewModel.gameloopStatus.get()).isEqualTo(Status.STOPPED);
+            switch (newStatus) {
+                case PAUSED:
+                    pause();
+                    break;
+                case RUNNING:
+                    play();
+                    break;
+                case STOPPED:
+                    stop();
+                    break;
+            }
+        }
+    }
 
-		getTimeline().play();
-		assertThat(getTimeline().getStatus()).isEqualTo(Status.RUNNING);
-		assertThat(viewModel.gameloopStatus.get()).isEqualTo(Status.RUNNING);
+    private final class SpeedChangeListener implements ChangeListener<SpeedLevel> {
+        @Override
+        public void changed(final ObservableValue<? extends SpeedLevel> arg0, final SpeedLevel oldSpeed,
+                            final SpeedLevel newSpeed) {
 
-		viewModel.gameloopStatus.set(Status.PAUSED);
+            final Status oldStatus = timeline.getStatus();
 
-		assertThat(getTimeline().getStatus()).isEqualTo(Status.PAUSED);
-	}
+            if (Status.RUNNING.equals(oldStatus)) {
+                pause();
+            }
 
-	private Timeline getTimeline() {
-		return (Timeline) Whitebox.getInternalState(gameLoop, "timeline");
-	}
+            init();
+
+            if (Status.RUNNING.equals(oldStatus)) {
+                play();
+            }
+        }
+    }
+
+    private final class CollisionListener implements ChangeListener<Boolean> {
+        @Override
+        public void changed(final ObservableValue<? extends Boolean> arg0, final Boolean oldValue,
+                            final Boolean newCollision) {
+            if (newCollision) {
+                stop();
+            }
+        }
+    }
+
+    private void play() {
+        timeline.play();
+    }
+
+    private void pause() {
+        timeline.pause();
+    }
+
+    private void stop() {
+        timeline.stop();
+    }
+
 }
