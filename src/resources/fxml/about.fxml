@@ -38,16 +38,11 @@
                         text="SnakeFX"/>
                 <Label
                         style=""
-                        text="© 2013, Manuel Mauky"
+                        text="© 2017 Programowanie Zdarzeniowe"
                         textFill="BLACK"/>
                 <Hyperlink
-                        fx:id="homepageLink"
-                        onAction="#homepageLink"
-                        text="http://www.lestard.eu"/>
-                <Hyperlink
-                        fx:id="licenseLink"
-                        onAction="#licenseLink"
-                        text="License: GNU General Public License Version 3"/>
+                        
+         
             </children>
             <padding>
                 <Insets

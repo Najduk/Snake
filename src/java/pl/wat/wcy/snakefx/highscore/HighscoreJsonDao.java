@@ -1,65 +1,50 @@
 package pl.wat.wcy.snakefx.highscore;
 
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig.Feature;
+import org.codehaus.jackson.map.type.TypeFactory;
 
-import org.mockito.internal.util.reflection.Whitebox;
-
-import pl.wat.wcy.snakefx.highscore.HighScoreEntry;
-import pl.wat.wcy.snakefx.highscore.HighscoreJsonDao;
-
-import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+public class HighscoreJsonDao implements HighscoreDao {
 
-public class HighscoreJsonDao {
+    private static final String HIGHSCORE_FILENAME = "highscores.json";
 
-	private final static String filename = "highscore.json";
+    private final Path filepath;
+    private final ObjectMapper mapper;
+    private final TypeFactory typeFactory;
 
-	private Path filepath;
+    public HighscoreJsonDao() {
+        filepath = Paths.get(HIGHSCORE_FILENAME);
+        mapper = new ObjectMapper();
+        mapper.configure(Feature.INDENT_OUTPUT, true);
+        typeFactory = TypeFactory.defaultInstance();
+    }
 
-	private HighscoreJsonDao dao;
+    @Override
+    public void persist(final List<HighScoreEntry> highscores) {
+        try {
+            mapper.writeValue(filepath.toFile(), highscores);
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-	public void setup() {
-		filepath = Paths.get("build/tmp", filename);
+    @Override
+    public List<HighScoreEntry> load() {
+        if (filepath.toFile().exists()) {
+            try {
+                return mapper.<List<HighScoreEntry>>readValue(filepath.toFile(),
+                        typeFactory.constructCollectionType(List.class, HighScoreEntry.class));
+            } catch (final IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Collections.emptyList();
+    }
 
-		dao = new HighscoreJsonDao();
-
-		Whitebox.setInternalState(dao, "filepath", filepath);
-
-	}
-
-	public void after() {
-		final File file = filepath.toFile();
-
-		if (file.exists()) {
-			file.delete();
-		}
-	}
-
-	public void PersistAndLoad() {
-		final List<HighScoreEntry> entries = new ArrayList<>();
-
-		entries.add(new HighScoreEntry(1, "yoda", 402));
-		entries.add(new HighScoreEntry(2, "luke", 212));
-		entries.add(new HighScoreEntry(3, "jabba", 123));
-
-		final File file = filepath.toFile();
-
-		assertThat(file).doesNotExist();
-
-		dao.persist(entries);
-
-		assertThat(file).exists().isFile();
-
-
-		final List<HighScoreEntry> loadedEntries = dao.load();
-
-		assertThat(loadedEntries).hasSize(3);
-		assertThat(loadedEntries.get(0)).isEqualsToByComparingFields(new HighScoreEntry(1, "yoda", 402));
-		assertThat(loadedEntries.get(1)).isEqualsToByComparingFields(new HighScoreEntry(2, "luke", 212));
-		assertThat(loadedEntries.get(2)).isEqualsToByComparingFields(new HighScoreEntry(3, "jabba", 123));
-	}
 }
