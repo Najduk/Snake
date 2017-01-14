@@ -1,49 +1,50 @@
 package pl.wat.wcy.snakefx.core;
 
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import pl.wat.wcy.snakefx.core.Field;
-import pl.wat.wcy.snakefx.core.State;
 
-import static org.assertj.core.api.Assertions.*;
+public class Field {
 
-public class Test {
+	private final Rectangle rectangle;
 
-	public void Initialization() {
+	private final int x;
+	private final int y;
 
-		int x = 3;
-		int y = 5;
+	private State state;
 
-		int sizeInPixel = 100;
+	public Field(final int x, final int y, final int sizeInPixel) {
+		this.x = x;
+		this.y = y;
 
-		Field field = new Field(x, y, sizeInPixel);
+		state = State.EMPTY;
 
-		Rectangle rectangle = field.getRectangle();
+		rectangle = new Rectangle(x * sizeInPixel, y * sizeInPixel,
+				sizeInPixel, sizeInPixel);
 
-		assertThat(rectangle.getWidth()).isEqualTo(sizeInPixel);
-		assertThat(rectangle.getHeight()).isEqualTo(sizeInPixel);
-
-		assertThat(rectangle.getX()).isEqualTo(300);
-		assertThat(rectangle.getY()).isEqualTo(500);
-
-		assertThat(field.getX()).isEqualTo(x);
-		assertThat(field.getY()).isEqualTo(y);
-
-		assertThat(field.getState()).isEqualTo(State.EMPTY);
-
-		assertThat(rectangle.getFill()).isEqualTo(State.EMPTY.getColor());
+		rectangle.setStroke(Color.LIGHTGRAY);
+		rectangle.setFill(Color.WHITE);
 
 	}
 
-
-	public void ChangeState() {
-
-		Field field = new Field(1, 1, 10);
-
-		field.changeState(State.HEAD);
-
-		assertThat(field.getState()).isEqualTo(State.HEAD);
-		assertThat(field.getRectangle().getFill()).isEqualTo(
-				State.HEAD.getColor());
+	public State getState() {
+		return state;
 	}
 
+	public void changeState(final State newState) {
+		state = newState;
+
+		rectangle.setFill(newState.getColor());
+	}
+
+	public Rectangle getRectangle() {
+		return rectangle;
+	}
+
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
+	}
 }
