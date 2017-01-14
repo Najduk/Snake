@@ -1,0 +1,25 @@
+package pl.wat.wcy.snakefx.core;
+
+public enum Direction {
+
+	UP(false),
+
+	DOWN(false),
+
+	LEFT(true),
+
+	RIGHT(true);
+
+	private boolean horizontal;
+
+	private Direction(final boolean horizontal) {
+		this.horizontal = horizontal;
+	}
+
+	public boolean hasSameOrientation(final Direction other) {
+		if (other == null) {
+			return false;
+		}
+		return (horizontal == other.horizontal);
+	}
+}
