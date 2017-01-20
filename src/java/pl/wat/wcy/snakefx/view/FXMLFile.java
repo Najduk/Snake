@@ -15,7 +15,7 @@ public enum FXMLFile {
 
 	HIGHSCORE("highscore.fxml"),
 
-	NEW_HIGHSCORE("newHighscore.fxml")
+	NEW_HIGHSCORE("newHighscore.fxml") 
 
 	;
 
