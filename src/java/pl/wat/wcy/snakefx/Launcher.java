@@ -8,7 +8,8 @@ import pl.wat.wcy.snakefx.util.FxmlFactory;
 import pl.wat.wcy.snakefx.util.KeyboardHandler;
 import pl.wat.wcy.snakefx.util.PopupDialogHelper;
 import pl.wat.wcy.snakefx.view.FXMLFile;
-import pl.wat.wcy.snakefx.viewmodel.ViewModel;
+import pl.wat.wcy.snakefx.viewmodel.ViewModel; 
+
 
 public class Launcher extends Application {
 
@@ -36,7 +37,6 @@ public class Launcher extends Application {
         Stage highScoreStage = popupDialogHelper.createModalDialog(viewModel.highscoreWindowOpen, primaryStage, FXMLFile.HIGHSCORE);
 
         popupDialogHelper.createModalDialog(viewModel.newHighscoreWindowOpen, highScoreStage, FXMLFile.NEW_HIGHSCORE);
-
 
         primaryStage.setTitle("SnakeFX");
         primaryStage.setScene(scene);
